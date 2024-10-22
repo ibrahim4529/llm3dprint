@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QMessageBox,
 )
-from app_setting import get_setting
+from llm3dprint.app_setting import get_setting
 
 
 class SettingDialog(QDialog):
@@ -34,11 +34,20 @@ class SettingDialog(QDialog):
         # 3D Print Slicer App Path
         self.slicer_app_path_label = QLabel("3D Print Slicer App Path:")
         self.slicer_app_path_input = QLineEdit()
-        self.slicer_app_path_button = QPushButton("Select Path")
+        self.slicer_app_path_button = QPushButton("Select Slicer App Path")
         self.slicer_app_path_button.clicked.connect(self.select_slicer_app_path)
         self.layout.addWidget(self.slicer_app_path_label)
         self.layout.addWidget(self.slicer_app_path_input)
         self.layout.addWidget(self.slicer_app_path_button)
+
+        # Openscad App Path
+        self.openscad_app_path_label = QLabel("Openscad App Path:")
+        self.openscad_app_path_input = QLineEdit()
+        self.openscad_app_path_button = QPushButton("Select Openscad App Path")
+        self.openscad_app_path_button.clicked.connect(self.select_openscad_app_path)
+        self.layout.addWidget(self.openscad_app_path_label)
+        self.layout.addWidget(self.openscad_app_path_input)
+        self.layout.addWidget(self.openscad_app_path_button)
 
         # Save Button
         self.save_button = QPushButton("Save")
@@ -56,6 +65,12 @@ class SettingDialog(QDialog):
         if file_path:
             self.slicer_app_path_input.setText(file_path)
 
+    def select_openscad_app_path(self):
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "Select Openscad App")
+        if file_path:
+            self.openscad_app_path_input.setText(file_path)
+
     def save_settings(self):
         if not self.validate_inputs():
             return
@@ -64,6 +79,7 @@ class SettingDialog(QDialog):
         setting.set_value("llm_api_url", self.llm_api_url_input.text())
         setting.set_value("llm_api_key", self.llm_api_key_input.text())
         setting.set_value("slicer_app_path", self.slicer_app_path_input.text())
+        setting.set_value("openscad_app_path", self.openscad_app_path_input.text())
         setting.sync()
         self.accept()
 
@@ -83,6 +99,11 @@ class SettingDialog(QDialog):
         if not self.slicer_app_path_input.text().strip():
             QMessageBox.warning(
                 self, "Input Error", "3D Print Slicer App Path cannot be empty."
+            )
+            return False
+        if not self.openscad_app_path_input.text().strip():
+            QMessageBox.warning(
+                self, "Input Error", "Openscad App Path cannot be empty."
             )
             return False
         return True

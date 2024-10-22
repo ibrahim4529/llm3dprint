@@ -1,65 +1,137 @@
-import requests
+import httpx
 import json
 import base64
 import trimesh
 from io import BytesIO
+import os
 
 class LLMClient:
     def __init__(self, api_key: str, base_url: str = "https://api.openai.com"):
         self.api_key = api_key
         self.base_url = base_url
+        self.timeout = httpx.Timeout(60.0)  # Long timeout of 60 seconds
+    
+    def set_api_key(self, api_key: str):
+        self.api_key = api_key
+    
+    def set_base_url(self, base_url: str):
+        self.base_url = base_url
 
-    def query_llm(self, prompt: str) -> str:
+    def generate_object_openscad_based(self, messages: list) -> str:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "X-Title": "LLM3DPrint"
         }
         payload = {
-            "model": "openai/shap-e",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a 3D printing expert. generate a stl file for a 3D model. and give me the download link."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            "model": "openai/gpt-4o-mini",
+            "messages": messages,
         }
 
-        json_payload = json.dumps(payload)
+        print(f"Sending request: {payload}")
 
         try:
-            response = requests.post(
-                f"{self.base_url}/v1/chat/completions",
+            response = httpx.post(
+                f"{self.base_url}/api/v1/chat/completions",
                 headers=headers,
-                data=json_payload
+                json=payload,
+                timeout=self.timeout
             )
             response.raise_for_status()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             print(f"Request failed: {e}")
-            return ""
+            return {
+                "message": "Error generating Openscad code"
+            }
 
-        if response.status_code != 200:
-            print(f"Unexpected status code: {response.status_code}")
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error: {e}")
             print(f"Response content: {response.text}")
-            return ""
+            return {
+                "message": "Error generating Openscad code"
+            }
+
+        try:
+            data = response.json()
+            print(response.text)
+            print("Response data: ", data)
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            print(f"Response content: {response.text}")
+            return {
+                "message": "Error generating Openscad code"
+            }
+
+        openscad_code = data["choices"][0]["message"]["content"]
+        new_histoy_message = data["choices"][0]["message"]
+        # takeout ```openscad from the code
+        openscad_code = openscad_code.replace("```openscad", "")
+        openscad_code = openscad_code.replace("```", "")
+        with open("temp_scad_file.scad", "w") as f:
+            f.write(openscad_code)
+        # generate stl file
+        os.system(f"openscad -o openscad_model.stl temp_scad_file.scad")
+        
+        return {
+            "openscad_code": openscad_code,
+            "message": f"Openscad code generated successfully\n{openscad_code}",
+            "new_histoy_message": new_histoy_message,
+            "file_name": "openscad_model.stl"
+        }
+    
+    def generate_object_stl_content_based(self, messages: list) -> str:
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "X-Title": "LLM3DPrint"
+        }
+        payload = {
+            "model": "openai/gpt-4o-mini",
+            "messages": messages,
+        }
+
+        try:
+            response = httpx.post(
+                f"{self.base_url}/api/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=self.timeout
+            )
+            response.raise_for_status()
+        except httpx.RequestError as e:
+            print(f"Request failed: {e}")
+            return {
+                "message": "Error generating STL content"
+            }
+
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error: {e}")
+            print(f"Response content: {response.text}")
+            return {
+                "message": "Error generating STL content"
+            }
 
         try:
             data = response.json()
         except json.JSONDecodeError as e:
             print(f"JSON decode error: {e}")
             print(f"Response content: {response.text}")
-            return ""
-
+            return {
+                "message": "Error generating STL content"
+            }
+        stl_content = data["choices"][0]["message"]["content"]
+       
+        new_histoy_message = data["choices"][0]["message"]
+        with open("stl_model_output.stl", "w") as f:
+            f.write(stl_content)
         return {
-            "message": data["choices"][0]["text"],
-            "model": data["choices"][0]["model"]
+            "stl_content": stl_content,
+            "message": f"STL content generated successfully\n{stl_content}",
+            "file_name": "stl_model_output.stl",
+            "new_histoy_message": new_histoy_message
         }
     
-    def generate_object_llm(self, prompt: str) -> str:
+    def generate_object_llm_shape(self, prompt: str) -> dict:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -74,20 +146,26 @@ class LLMClient:
         json_payload = json.dumps(payload)
 
         try:
-            response = requests.post(
+            response = httpx.post(
                 f"{self.base_url}/api/v1/objects/generations",
                 headers=headers,
-                data=json_payload
+                json=json_payload,
+                timeout=self.timeout
             )
             response.raise_for_status()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             print(f"Request failed: {e}")
-            return ""
+            print(f"Response content: {response.text}")
+            return {
+                "message": "Error generating file"
+            }
         
         if response.status_code != 200:
             print(f"Unexpected status code: {response.status_code}")
             print(f"Response content: {response.text}")
-            return ""
+            return {
+                "message": "Error generating file"
+            }
 
         try:
             data = response.json()
@@ -97,7 +175,6 @@ class LLMClient:
             mesh = trimesh.load(BytesIO(ply_data), file_type="ply")
             
             stl_data = mesh.export(file_type="stl")
-            file_name = ""
             with open("output.stl", "wb") as f:
                 f.write(stl_data)
                 file_name = f.name
@@ -109,4 +186,6 @@ class LLMClient:
         except json.JSONDecodeError as e:
             print(f"JSON decode error: {e}")
             print(f"Response content: {response.text}")
-            return ""
+            return {
+                "message": "Error generating file"
+            }

@@ -43,3 +43,6 @@ class ChatHistory(QListWidget):
             layout.setAlignment(Qt.AlignRight)
         
         return widget
+
+    def clean_all_history(self):
+        self.clear()

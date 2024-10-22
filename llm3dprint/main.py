@@ -1,7 +1,6 @@
 import sys
 from PySide6.QtWidgets import QApplication
-# from app_setting import get_setting
-from main_window import MainWindow
+from llm3dprint.main_window import MainWindow
 
 
 def main():
