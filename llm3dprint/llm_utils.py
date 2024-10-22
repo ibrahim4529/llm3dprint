@@ -143,14 +143,12 @@ class LLMClient:
             "numInferenceSteps": 48
         }
 
-        json_payload = json.dumps(payload)
-
         try:
             response = httpx.post(
                 f"{self.base_url}/api/v1/objects/generations",
                 headers=headers,
-                json=json_payload,
-                timeout=self.timeout
+                json=payload,
+                timeout=10000
             )
             response.raise_for_status()
         except httpx.RequestError as e:
@@ -160,8 +158,8 @@ class LLMClient:
                 "message": "Error generating file"
             }
         
-        if response.status_code != 200:
-            print(f"Unexpected status code: {response.status_code}")
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error: {e}")
             print(f"Response content: {response.text}")
             return {
                 "message": "Error generating file"
