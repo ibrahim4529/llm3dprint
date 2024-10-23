@@ -58,7 +58,9 @@ class LLMThread(QThread):
                     })
                     response = self.llm_client.generate_object_openscad_based(
                         self.hitory_openscad)
-                    # self.hitory_openscad.append(response)
+                    if response["new_histoy_message"]:
+                        self.hitory_openscad.append(
+                            response["new_histoy_message"])
                 elif self.model == 2:
                     self.hitory_stl.append({
                         "role": "user",
@@ -66,7 +68,8 @@ class LLMThread(QThread):
                     })
                     response = self.llm_client.generate_object_stl_content_based(
                         self.hitory_stl)
-                    # self.hitory_stl.append(response)
+                    if response["new_histoy_message"]:
+                        self.hitory_stl.append(response["new_histoy_message"])
                 self.response_received.emit(response)
             except Exception as e:
                 print(f"Error: {str(e)}")

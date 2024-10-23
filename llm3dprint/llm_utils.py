@@ -9,6 +9,7 @@ class LLMClient:
     def __init__(self, api_key: str, base_url: str = "https://api.openai.com"):
         self.api_key = api_key
         self.base_url = base_url
+        self.open_router_model = "openai/gpt-4o-mini"
         self.timeout = httpx.Timeout(60.0)  # Long timeout of 60 seconds
     
     def set_api_key(self, api_key: str):
@@ -16,6 +17,9 @@ class LLMClient:
     
     def set_base_url(self, base_url: str):
         self.base_url = base_url
+    
+    def set_open_router_model(self, model: str):
+        self.open_router_model = model
 
     def generate_object_openscad_based(self, messages: list) -> str:
         headers = {
@@ -24,7 +28,7 @@ class LLMClient:
             "X-Title": "LLM3DPrint"
         }
         payload = {
-            "model": "openai/gpt-4o-mini",
+            "model": self.open_router_model,
             "messages": messages,
         }
 
@@ -86,7 +90,7 @@ class LLMClient:
             "X-Title": "LLM3DPrint"
         }
         payload = {
-            "model": "openai/gpt-4o-mini",
+            "model": self.open_router_model,
             "messages": messages,
         }
 

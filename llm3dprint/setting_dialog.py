@@ -49,6 +49,12 @@ class SettingDialog(QDialog):
         self.layout.addWidget(self.openscad_app_path_input)
         self.layout.addWidget(self.openscad_app_path_button)
 
+        # Operouter Model
+        self.operouter_model_label = QLabel("Operouter Model:")
+        self.operouter_model_input = QLineEdit()
+        self.layout.addWidget(self.operouter_model_label)
+        self.layout.addWidget(self.operouter_model_input)
+
         # Save Button
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(self.save_settings)
@@ -80,6 +86,7 @@ class SettingDialog(QDialog):
         setting.set_value("llm_api_key", self.llm_api_key_input.text())
         setting.set_value("slicer_app_path", self.slicer_app_path_input.text())
         setting.set_value("openscad_app_path", self.openscad_app_path_input.text())
+        setting.set_value("operouter_model", self.operouter_model_input.text())
         setting.sync()
         self.accept()
 
@@ -88,6 +95,8 @@ class SettingDialog(QDialog):
         self.llm_api_url_input.setText(setting.get_value("llm_api_url") or "")
         self.llm_api_key_input.setText(setting.get_value("llm_api_key") or "")
         self.slicer_app_path_input.setText(setting.get_value("slicer_app_path") or "")
+        self.openscad_app_path_input.setText(setting.get_value("openscad_app_path") or "")
+        self.operouter_model_input.setText(setting.get_value("operouter_model") or "")
 
     def validate_inputs(self):
         if not self.llm_api_url_input.text().strip():
