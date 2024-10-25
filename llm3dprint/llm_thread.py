@@ -11,8 +11,8 @@ class LLMThread(QThread):
     hitory_openscad = [
         {
             "role": "system",
-            "content": """You are machine to generate openscad code to create 3D object based on the prompt.
-            return the openscad code without any other information. and make sure content is only cde qithout any prefix or suffix.
+            "content": """You are ai agent help me to generate openscad code to create 3D object based on the prompt.
+            return the openscad code without any other information, and make sure content is only code without any prefix or suffix.
             """
         }
     ]
@@ -20,8 +20,8 @@ class LLMThread(QThread):
         {
             "role": "system",
             "content": """
-            You are machine to generate stl file content to create 3D object based on the prompt.
-            return the stl file content without any other information. and make sure content is only cde qithout any prefix or suffix.
+            You are ai agent help me to generate stl file content to create 3D object based on the prompt.
+            return the stl file content without any other information, and make sure content is only code without any prefix or suffix.
             """
         }
     ]
@@ -42,7 +42,9 @@ class LLMThread(QThread):
     def run(self):
         api_key = self.setting.get_value("llm_api_key")
         base_url = self.setting.get_value("llm_api_url")
+        model = self.setting.get_value("operouter_model")
         self.llm_client = LLMClient(api_key, base_url)
+        self.llm_client.set_open_router_model(model)
 
         self.running = True
         while self.running:
