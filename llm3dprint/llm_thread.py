@@ -49,7 +49,6 @@ class LLMThread(QThread):
     def run(self):
         self.init_llm_client()
         self.running = True
-        print("running")
         while self.running:
             try:
                 self.is_loading.emit(True)
@@ -57,9 +56,6 @@ class LLMThread(QThread):
                     response = self.llm_client.generate_object_llm_shape_e_model(
                         self.prompt)
                 elif self.model == 1 or self.model == 3 and self.llm_client is not None:
-                    print(self.model)
-                    print("Using openscad")
-                    print(type(self.llm_client))
                     self.hitory_openscad.append({
                         "role": "user",
                         "content": self.prompt

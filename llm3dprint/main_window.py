@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QComboBox
 )
+from llama_index_thread import LlamaIndexThread
 from llm3dprint.app_setting import get_setting
 from llm3dprint.setting_dialog import SettingDialog
 from llm3dprint.chat_history import ChatHistory
@@ -18,7 +19,8 @@ MODEL_OPTIONS = [
     "OpenRouter (openscad)",
     "OpenRouter (stl file content)",
     "Ollama (openscad)",
-    "Ollama (stl file content)"
+    "Ollama (stl file content)",
+    "LLama Index (OpenRouter: OPENSCAD)",
 ]
 
 
@@ -30,8 +32,12 @@ class MainWindow(QMainWindow):
         self.setting = get_setting()
         self.stl_viewer = STLViewer()
         self.llm_thread = LLMThread()
+        self.llma_index_thread = LlamaIndexThread()
         self.llm_thread.response_received.connect(self.handle_llm_response)
+        self.llma_index_thread.response_received.connect(self.handle_llm_response)
+        
         self.llm_thread.is_loading.connect(self.set_loading_state)
+        self.llma_index_thread.is_loading.connect(self.set_loading_state)
         self.restore_ui()
         self.setup_menu()
         self.setup_ui()
@@ -118,11 +124,14 @@ class MainWindow(QMainWindow):
         if message:
             self.chat_history.add_user_message(message)
             self.input_message.clear()
+        if model >= 5:
+            self.llma_index_thread.prompt_request(message)
+        else:
             self.llm_thread.prompt_request(message, model)
 
     def handle_llm_response(self, response):
         if isinstance(response, dict):
-            print(response)
+            print("response from LLM: ", response)
             self.chat_history.add_llm_message(response["message"])
             self.stl_viewer.load_stl(response["file_name"])
         elif isinstance(response, str):
@@ -139,3 +148,4 @@ class MainWindow(QMainWindow):
         self.chat_history.clean_all_history()
         self.stl_viewer.clear()
         self.llm_thread.reset_history()
+        self.llma_index_thread.reinit_message()
