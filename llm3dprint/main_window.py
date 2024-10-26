@@ -5,10 +5,12 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QWidget,
-    QComboBox
+    QComboBox,
+    QMessageBox,
 )
 from llama_index_thread import LlamaIndexThread
 from llm3dprint.app_setting import get_setting
+from llm3dprint.print_utils import open_with_slicer
 from llm3dprint.setting_dialog import SettingDialog
 from llm3dprint.chat_history import ChatHistory
 from llm3dprint.stl_viewer import STLViewer
@@ -103,6 +105,7 @@ class MainWindow(QMainWindow):
         # make menu bar native window
         self.menuBar().setNativeMenuBar(False)
         self.menu = self.menuBar().addMenu("File")
+        self.menu.addAction("Open in Slicer", self.open_in_slicer)
         self.menu.addAction("Exit", self.close)
         self.menu = self.menuBar().addMenu("Edit")
         self.menu.addAction("Settings", self.show_settings)
@@ -149,3 +152,11 @@ class MainWindow(QMainWindow):
         self.stl_viewer.clear()
         self.llm_thread.reset_history()
         self.llma_index_thread.reinit_message()
+
+    def open_in_slicer(self):
+        if self.stl_viewer.file_path:
+            try:
+               open_with_slicer(self.stl_viewer.file_path)
+            except FileNotFoundError as e:
+                QMessageBox.critical(self, "Error", str(e))
+               
