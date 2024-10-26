@@ -258,7 +258,7 @@ class OpenRouterClient(BaseLLMClient):
                 f"{self.base_url}/api/v1/objects/generations",
                 headers=self.headers,
                 json=payload,
-                timeout=self.timeout
+                timeout=10000
             )
             response.raise_for_status()
         except httpx.RequestError or httpx.HTTPStatusError as e:
