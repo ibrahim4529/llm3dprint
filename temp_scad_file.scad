@@ -1,32 +1,14 @@
 
-// Chair Design with Beveled Top Backrest and Higher Legs
+module ring(outer_diameter=20, thickness=2, width=5) {
+    difference() {
+        // Outer cylinder
+        cylinder(h=width, r=outer_diameter/2, $fn=100);
 
-module chair() {
-    translate([0, 0, 1]) {
-        // Seat
-        cube([30, 30, 2]);
-
-        // Backrest with Top Bevel
-        translate([0, 28, 2]) {
-            // Main backrest
-            cube([30, 2, 35]);
-
-            // Bevel 30% from top
-            translate([0, 0, 24])
-                scale([1, 1, 0.3])
-                cube([30, 2, 11]);
-        }
-
-        // Higher Legs
-        translate([1, 1, -25])
-            cube([4, 4, 27]);
-        translate([25, 1, -25])
-            cube([4, 4, 27]);
-        translate([1, 25, -25])
-            cube([4, 4, 27]);
-        translate([25, 25, -25])
-            cube([4, 4, 27]);
+        // Inner cylinder
+        translate([0, 0, -1])
+        cylinder(h=width + 2, r=(outer_diameter - thickness*2)/2, $fn=100);
     }
 }
 
-chair();
+// Create a ring with a 20 mm outer diameter
+ring(outer_diameter=20);
