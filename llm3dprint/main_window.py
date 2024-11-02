@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QMessageBox,
 )
-from llama_index_thread import LlamaIndexThread
+from llm3dprint.llama_index_thread import LlamaIndexThread
 from llm3dprint.app_setting import get_setting
 from llm3dprint.print_utils import open_with_slicer
 from llm3dprint.setting_dialog import SettingDialog
