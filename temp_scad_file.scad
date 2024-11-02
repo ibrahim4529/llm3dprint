@@ -1,29 +1,34 @@
-// Chair
+$fn=50;
+
+module chair_leg() {
+    difference() {
+        cylinder(h = 90, r1 = 20, r2 = 0, center = true);
+        translate([0, 0, -5])
+        cylinder(h = 100, r1 = 16, r2 = 16, center = true);
+    }
+}
+
+module chair_back() {
+    difference() {
+        cube([40, 3, 60]);
+        translate([0, 0, 60])
+        cube([40, 30, 3]);
+    }
+}
+
+module chair_seat() {
+    cube([40, 40, 3]);
+}
 
 module chair() {
-    difference() {
-        // Seat
-        cube([20,20,2]);
+    union() {
+        translate([-8, -8, 0]) chair_leg();
+        translate([32, -8, 0]) chair_leg();
+        translate([-8, 32, 0]) chair_leg();
+        translate([32, 32, 0]) chair_leg();
         
-        // Backrest
-        translate([0,18,18])
-        cube([20,2,18]);
-        
-        // Backrest crossbars
-        translate([0,18,8])
-        cube([20,20,2]);
-        translate([0,18,8])
-        cube([20,2,18]);
-        translate([0,18,28])
-        cube([20,2,18]);
-        
-        // Legs
-        for (i = [0:1:1]){
-            for (j = [0:1:1]){
-                translate([i*18,j*18,-18])
-                cube([2,2,20]);
-            }
-        }
+        translate([12, 0, 99]) chair_back();
+        translate([0, 0, 72]) chair_seat();
     }
 }
 

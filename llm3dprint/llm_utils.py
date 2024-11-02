@@ -6,6 +6,8 @@ import trimesh
 from io import BytesIO
 import os
 
+from llm3dprint.openscad_utils import create_temp_stl_openscad
+
 
 class BaseLLMClient:
     """Base class for LLM clients
@@ -188,16 +190,13 @@ class OpenRouterClient(BaseLLMClient):
             openscad_code = openscad_code.replace("```openscad", "")
             openscad_code = openscad_code.replace("```", "")
 
-            with open("temp_scad_file.scad", "w") as f:
-                f.write(openscad_code)
-            # generate stl file
-            os.system("openscad -o openscad_model.stl temp_scad_file.scad")
+            file_path = create_temp_stl_openscad(openscad_code)
 
             return {
                 "openscad_code": openscad_code,
                 "message": f"Openscad code generated successfully\n{openscad_code}",
                 "new_histoy_message": new_histoy_message,
-                "file_name": "openscad_model.stl"
+                "file_name": file_path
             }
         except json.JSONDecodeError as e:
             print(f"JSON decode error: {e}")

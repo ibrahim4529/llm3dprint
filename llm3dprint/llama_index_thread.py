@@ -4,6 +4,8 @@ from llama_index.core.llms import ChatMessage
 from llm3dprint.app_setting import get_setting
 import os
 
+from llm3dprint.openscad_utils import create_temp_stl_openscad
+
 
 class LlamaIndexThread(QThread):
     """Thread for running LLM API requests"""
@@ -52,10 +54,10 @@ class LlamaIndexThread(QThread):
                 if openscad_code:
                     with open("temp_llama_index.scad", "w") as f:
                         f.write(openscad_code)
-                    os.system("openscad temp_llama_index.scad -o temp_llama_index.stl")
+                    file_path = create_temp_stl_openscad(openscad_code)
                     self.response_received.emit({
                         "message": "3D Model Generate Successfully",
-                        "file_name": "temp_llama_index.stl"
+                        "file_name": file_path
                     })
                 self.messages.append(response.message)
             except Exception as e:
