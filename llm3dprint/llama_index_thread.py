@@ -1,53 +1,29 @@
 from PySide6.QtCore import QThread, Signal, Slot
-from llama_index.core.chat_engine.types import ChatMessage
-from llama_index.llms.ollama import Ollama
-from llama_index.core.agent import ReActAgent
 from llama_index.llms.openrouter import OpenRouter
-from llama_index.agent.openai import OpenAIAgent
-from llama_index.core.tools import FunctionTool
-from llama_index.core.memory import BaseMemory
-
+from llama_index.core.llms import ChatMessage
 from app_setting import get_setting
-
-def multify_function(a: int, b: int) -> int:
-    """Multiply two numbers together and return the result"""
-    return a * b
-
-def create_stl_file(content: str):
-    """This function will create an STL file from the content of the response
-    and will return the path to the file.
-    """
-    with open("output.stl", "w") as f:
-        f.write(content)
-    
-    return "output.stl"
-    
+import os
 
 
 class LlamaIndexThread(QThread):
     """Thread for running LLM API requests"""
 
-    response_received = Signal(str)
+    response_received = Signal(dict)
     setting = get_setting()
-    memory = BaseMemory.from_defaults()
+    is_loading = Signal(bool)
+    messages: list[ChatMessage] = []
+    
 
     @Slot()
-    def prompt_request(self, prompt: str, model: str = "openai/gpt-3.5-turbo"):
-        """Start the thread with a prompt and model selected"""
+    def prompt_request(self, prompt: str):
+        """Start the thread with a prompt and model selected
+        @TODO: implement RAG for the model to make better responses
+        """
         self.prompt = prompt
-        # self.model = OpenRouter(
-        #     model=model,
-        #     api_key=self.setting.get_value("llm_api_key"),
-        # )
-        self.llm = Ollama(
-            model="llama3.1",
-        )
-        self.agent = ReActAgent(
-            tools=[FunctionTool.from_defaults(fn=multify_function), FunctionTool.from_defaults(fn=create_stl_file)],
-            llm=self.llm,
-            memory=self.memory,
-            max_iterations=10,
-            verbose=True,
+        self.agent = OpenRouter(
+            model=self.setting.get_value("openrouter_model"),
+            api_key=self.setting.get_value("llm_api_key"),
+            max_tokens=4096,
         )
         self.start()
 
@@ -55,19 +31,52 @@ class LlamaIndexThread(QThread):
         super(LlamaIndexThread, self).__init__(parent)
         self.running = False
         self.finished.connect(self.stop)
+        self.reinit_message()
 
     def run(self):
         self.running = True
+        new_prompt: ChatMessage = ChatMessage(
+            role="user",
+            content=self.prompt
+        )
+        self.messages.append(new_prompt)
+        self.is_loading.emit(True)
         while self.running:
             try:
-                response = self.agent.chat(self.prompt)
-                self.response_received.emit(response.__str__())
+                response = self.agent.chat(self.messages)
+                openscad_code = response.message.content
+                # Clean mesup ```openscad code``` or any other information in the response.
+                print("Response from LLM: ", response.message)
+                openscad_code = openscad_code.replace("```openscad", "")
+                openscad_code = openscad_code.replace("```", "")
+                if openscad_code:
+                    with open("temp_llama_index.scad", "w") as f:
+                        f.write(openscad_code)
+                    os.system("openscad temp_llama_index.scad -o temp_llama_index.stl")
+                    self.response_received.emit({
+                        "message": "3D Model Generate Successfully",
+                        "file_name": "temp_llama_index.stl"
+                    })
+                self.messages.append(response.message)
             except Exception as e:
-                print(f"Error: {str(e)}")
-                print(type(e))
-                self.response_received.emit(f"Error: {str(e)}")
+                print("Error Communicating with LLM ", e)
+                self.response_received.emit({
+                    "message": "Error Communicating with LLM ",
+                })
             self.running = False
-
+            self.is_loading.emit(False)
     def stop(self):
         self.running = False
+    
+    def reinit_message(self):
+        system_message: ChatMessage = ChatMessage(
+            role="system",
+            content="""You are openscad master, you will help me to generate the 3D model from the prompt.
+            I will give you the prompt and you will give me the openscad code.
+            Make sure to use the correct syntax and format for the openscad code.
+            Dont add any extra information in the code, dont add prefix or suffix to the code.
+            please dont provide ```openscad code``` or any other information in the response.
+            """
+        )
+        self.messages.append(system_message)
     

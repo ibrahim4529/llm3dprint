@@ -5,6 +5,9 @@ pv.global_theme.allow_empty_mesh = True
 
 
 class STLViewer(QWidget):
+    """Widget for viewing STL files
+    """
+    file_path = None
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
@@ -16,6 +19,7 @@ class STLViewer(QWidget):
         self.plotter.show()
 
     def load_stl(self, stl_path):
+        self.file_path = stl_path
         self.plotter.clear()
         self.plotter.add_mesh(pv.read(stl_path))
         self.plotter.show()
