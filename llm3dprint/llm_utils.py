@@ -1,4 +1,4 @@
-from app_setting import get_setting
+from llm3dprint.app_setting import get_setting
 import httpx
 import json
 import base64

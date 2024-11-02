@@ -1,6 +1,6 @@
 import subprocess
 import os
-from app_setting import get_setting
+from llm3dprint.app_setting import get_setting
 
 def open_with_slicer(file_path):
     """

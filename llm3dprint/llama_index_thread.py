@@ -1,7 +1,7 @@
 from PySide6.QtCore import QThread, Signal, Slot
 from llama_index.llms.openrouter import OpenRouter
 from llama_index.core.llms import ChatMessage
-from app_setting import get_setting
+from llm3dprint.app_setting import get_setting
 import os
 
 
